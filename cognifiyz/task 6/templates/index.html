@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Scraper</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div class="container py-5">
+    <h1 class="mb-4 text-center">🌐 Interactive Web Scraper</h1>
+
+    <!-- Controls -->
+    <div class="card shadow-sm p-4 mb-4">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label fw-bold">Choose a site</label>
+          <select id="site" class="form-select">
+            <option value="quotes">Quotes to Scrape</option>
+            <option value="hackernews">Hacker News</option>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label fw-bold">Search</label>
+          <input type="text" id="query" class="form-control" placeholder="Type a keyword...">
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-primary w-100" onclick="scrape()">🔍 Scrape</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle" id="results"></table>
+    </div>
+
+    <!-- Next button -->
+    <div class="d-flex justify-content-center mt-3">
+      <button id="nextBtn" class="btn btn-outline-primary" style="display:none;" onclick="nextPage()">➡ Next Page</button>
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+
+    async function scrape() {
+      currentPage = 1;
+      await fetchData();
+    }
+
+    async function nextPage() {
+      currentPage++;
+      await fetchData();
+    }
+
+    async function fetchData() {
+      const site = document.getElementById("site").value;
+      const query = document.getElementById("query").value;
+
+      const response = await fetch("/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ site, query, page: currentPage })
+      });
+
+      const result = await response.json();
+
+      let table = "<thead><tr>";
+      result.headers.forEach(h => table += `<th>${h}</th>`);
+      table += "</tr></thead><tbody>";
+
+      result.data.forEach(row => {
+        table += "<tr>";
+        row.forEach(item => table += `<td>${item}</td>`);
+        table += "</tr>";
+      });
+
+      table += "</tbody>";
+      document.getElementById("results").innerHTML = table;
+      document.getElementById("nextBtn").style.display = result.has_next ? "inline-block" : "none";
+    }
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
